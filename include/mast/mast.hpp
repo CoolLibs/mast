@@ -1,7 +1,3 @@
 #pragma once
 
-namespace mast {
-
-
-    
-} // namespace mast
+#include "../src/TreeBuilder.h"
