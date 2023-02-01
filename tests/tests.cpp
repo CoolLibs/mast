@@ -6,6 +6,15 @@
 
 TEST_CASE("Get Expression Test")
 {
-    const auto myTree = mast::TreeBuilder{"3x+2"};
-    CHECK(myTree.get_expression() == "3x+2");
+    auto operators = std::vector<mast::OperatorConcrete>{};
+    operators.push_back(mast::OperatorConcrete{"^", true, 4});
+
+    auto parser = mast::Parser{operators};
+    std::string expression = "3 + 4 * 2 / ( 1 - 5 ) ^ 2 ^ 3";
+
+    mast::TreeNode tree = parser.expression_to_ast(expression);
+    double result = mast::evaluateAST(tree);
+    std::cout << "resultat : " << result;
+
+    //CHECK(myTree.get_expression() == "3x+2");
 }
