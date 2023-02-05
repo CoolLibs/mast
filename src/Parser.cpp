@@ -60,7 +60,7 @@ auto Parser::expression_to_ast(std::string expression) -> std::shared_ptr<TreeNo
                 while (!operator_stack.empty() && _operators.contains(operator_stack.top()))
                 {
                     o2 = &_operators.at(operator_stack.top());
-                    if ((!o1.is_right_associative() && o1.compare_precedence(o2) == 0) || o1.compare_precedence(o2) < 0)
+                    if ((!o1.is_right_associative() && o1.compare_precedence(o2) == 0) || o1.compare_precedence(o2) > 0)
                     {
                         operator_stack.pop();
                         add_node(operand_stack, o2->get_symbol()[0]);
