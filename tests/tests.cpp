@@ -15,7 +15,7 @@ TEST_CASE("Get Expression Test")
     operators.push_back(mast::OperatorConcrete{"-", false, 2});
 
     auto parser = mast::Parser{operators};
-    std::string expression = "4 + 2";
+    std::string expression = "(4 + 2)*3";
 
     auto tree = parser.expression_to_ast(expression);
 

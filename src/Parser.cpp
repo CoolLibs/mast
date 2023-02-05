@@ -55,12 +55,12 @@ auto Parser::expression_to_ast(std::string expression) -> std::shared_ptr<TreeNo
             }
             break;
         default:
-            if (_operators.count(c))
+            if (_operators.contains(c))
             {
                 OperatorConcrete  o1 = _operators.at(c);
                 OperatorConcrete* o2 = nullptr;
 
-                while (!operator_stack.empty())
+                while (!operator_stack.empty() && _operators.contains(operator_stack.top()))
                 {
                     o2 = &_operators.at(operator_stack.top());
                     if ((!o1.is_right_associative() && o1.compare_precedence(o2) == 0) || o1.compare_precedence(o2) < 0)
@@ -84,8 +84,12 @@ auto Parser::expression_to_ast(std::string expression) -> std::shared_ptr<TreeNo
     }
     while (!operator_stack.empty())
     {
-        add_node(operand_stack, operator_stack.top());
+        if (operator_stack.top() == '(') {
+            operator_stack.pop();
+            continue;
+        }
 
+        add_node(operand_stack, operator_stack.top());
         operator_stack.pop();
     }
 
@@ -94,6 +98,7 @@ auto Parser::expression_to_ast(std::string expression) -> std::shared_ptr<TreeNo
 
 void Parser::add_node(std::stack<std::shared_ptr<TreeNode>>& stack, char& char_operator)
 {
+    // ToDo: verifs
     std::shared_ptr<TreeNode> right = stack.top();
     stack.pop();
 
