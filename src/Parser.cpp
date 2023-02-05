@@ -1,4 +1,7 @@
 #include "Parser.h"
+#include <iostream>
+#include <memory>
+#include <stdexcept>
 
 namespace mast {
 
@@ -10,10 +13,10 @@ Parser::Parser(std::vector<OperatorConcrete> operators)
     }
 }
 
-auto Parser::expression_to_ast(std::string expression) -> TreeNode
+auto Parser::expression_to_ast(std::string expression) -> std::shared_ptr<TreeNode>
 {
-    std::stack<char>     operator_stack{};
-    std::stack<TreeNode> operand_stack{};
+    std::stack<char>                      operator_stack{};
+    std::stack<std::shared_ptr<TreeNode>> operand_stack{};
 
     std::string::const_iterator it;
     for (it = expression.begin(); it != expression.end(); it++)
@@ -44,10 +47,11 @@ auto Parser::expression_to_ast(std::string expression) -> TreeNode
                     break;
                 }
             }
+            // ToDo: Verif is useless
             if (operator_stack.empty())
             {
-                // ToDo : "Unbalanced right parentheses" exception
-                throw std::exception();
+                // ToDo : better exception
+                throw std::runtime_error("Unbalanced right parentheses");
             }
             break;
         default:
@@ -55,24 +59,25 @@ auto Parser::expression_to_ast(std::string expression) -> TreeNode
             {
                 OperatorConcrete  o1 = _operators.at(c);
                 OperatorConcrete* o2 = nullptr;
-                while (!operator_stack.empty() && _operators.count(operator_stack.top()))
+
+                while (!operator_stack.empty())
                 {
                     o2 = &_operators.at(operator_stack.top());
-                    if ((!o1.is_right_associative() && o1.get_precedence() == o2->get_precedence()) || o2->get_precedence() > o1.get_precedence())
+                    if ((!o1.is_right_associative() && o1.compare_precedence(o2) == 0) || o1.compare_precedence(o2) < 0)
                     {
                         operator_stack.pop();
                         add_node(operand_stack, o2->get_symbol()[0]);
                     }
                     else
                     {
-                        break;
+                        continue;
                     }
                 }
                 operator_stack.push(c);
             }
             else
             {
-                operand_stack.push(TreeNode{std::string(1, c), nullptr, nullptr});
+                operand_stack.push(std::make_shared<TreeNode>(std::string(1, c), nullptr, nullptr));
             }
             break;
         }
@@ -80,19 +85,21 @@ auto Parser::expression_to_ast(std::string expression) -> TreeNode
     while (!operator_stack.empty())
     {
         add_node(operand_stack, operator_stack.top());
+
         operator_stack.pop();
     }
+
     return operand_stack.top();
 }
 
-void Parser::add_node(std::stack<TreeNode>& stack, char char_operator)
+void Parser::add_node(std::stack<std::shared_ptr<TreeNode>>& stack, char& char_operator)
 {
-    TreeNode right = stack.top();
+    std::shared_ptr<TreeNode> right = stack.top();
     stack.pop();
 
-    TreeNode left = stack.top();
+    std::shared_ptr<TreeNode> left = stack.top();
     stack.pop();
 
-    stack.push(TreeNode{std::string(1, char_operator), &left, &right});
+    stack.push(std::make_shared<TreeNode>(std::string(1, char_operator), left, right));
 }
 } // namespace mast

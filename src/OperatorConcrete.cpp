@@ -7,4 +7,14 @@ OperatorConcrete::OperatorConcrete(const std::string& symbol, const bool& right_
 {
 }
 
+auto OperatorConcrete::compare_precedence(IOperator* o) -> int
+{
+    if (auto* other = dynamic_cast<OperatorConcrete*>(o))
+    {
+        return (_precedence > other->_precedence) ? 1 : (other->_precedence == _precedence) ? 0
+                                                                                            : -1;
+    }
+    return -o->compare_precedence(this);
+}
+
 } // namespace mast
