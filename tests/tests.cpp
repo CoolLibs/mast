@@ -7,20 +7,21 @@
 TEST_CASE("Get Expression Test")
 {
     auto operators = std::vector<mast::OperatorConcrete>{};
-    //ToDo : Get a more flexible precedence
-    operators.push_back(mast::OperatorConcrete{"^", true, 4});
-    operators.push_back(mast::OperatorConcrete{"*", false, 3});
-    operators.push_back(mast::OperatorConcrete{"/", false, 3});
-    operators.push_back(mast::OperatorConcrete{"+", false, 2});
-    operators.push_back(mast::OperatorConcrete{"-", false, 2});
+    // ToDo : Get a more flexible precedence
+    operators.emplace_back("^", true, 4);
+    operators.emplace_back("*", false, 3);
+    operators.emplace_back("/", false, 3);
+    operators.emplace_back("+", false, 2);
+    operators.emplace_back("-", false, 2);
 
     auto parser = mast::Parser{operators};
-    std::string expression = "(4 + 2)*3";
 
-    auto tree = parser.expression_to_ast(expression);
+    std::string const expression = "(4 + 2)*3";
 
-    //double result = mast::evaluateAST(tree);
-    //std::cout << "resultat : " << result;
+    auto const tree = parser.expression_to_ast(expression);
 
-    //CHECK(myTree.get_expression() == "3x+2");
+    double result = mast::evaluateAST(*tree);
+    std::cout << "resultat : " << result;
+
+    // CHECK(myTree.get_expression() == "3x+2");
 }

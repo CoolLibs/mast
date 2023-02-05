@@ -11,8 +11,7 @@ public:
 
     [[nodiscard]] auto is_right_associative() const -> bool override { return _right_associative; };
     [[nodiscard]] auto get_symbol() const -> std::string override { return _symbol; };
-    [[nodiscard]] auto get_precedence() const -> int8_t override { return _precedence; };
-    auto compare_precedence(IOperator* o) -> int override;
+    [[nodiscard]] auto compare_precedence(IOperator* o) -> int override;
 
 private:
     const std::string _symbol;

@@ -1,13 +1,12 @@
 #include "Parser.h"
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 
 namespace mast {
 
-Parser::Parser(std::vector<OperatorConcrete> operators)
+Parser::Parser(const std::vector<OperatorConcrete>& operators)
 {
-    for (auto o : operators)
+    for (const auto& o : operators)
     {
         _operators.insert({o.get_symbol()[0], o});
     }
@@ -21,8 +20,8 @@ auto Parser::expression_to_ast(std::string expression) -> std::shared_ptr<TreeNo
     std::string::const_iterator it;
     for (it = expression.begin(); it != expression.end(); it++)
     {
-        char c = *it;
-        char popped;
+        char const c      = *it;
+        char       popped = 0;
 
         switch (c)
         {
@@ -41,11 +40,9 @@ auto Parser::expression_to_ast(std::string expression) -> std::shared_ptr<TreeNo
                 {
                     break;
                 }
-                else
-                {
-                    add_node(operand_stack, popped);
-                    break;
-                }
+
+                add_node(operand_stack, popped);
+                break;
             }
             // ToDo: Verif is useless
             if (operator_stack.empty())
@@ -84,7 +81,9 @@ auto Parser::expression_to_ast(std::string expression) -> std::shared_ptr<TreeNo
     }
     while (!operator_stack.empty())
     {
-        if (operator_stack.top() == '(') {
+        // ToDo : This verification was not in the java example
+        if (operator_stack.top() == '(')
+        {
             operator_stack.pop();
             continue;
         }
@@ -96,13 +95,13 @@ auto Parser::expression_to_ast(std::string expression) -> std::shared_ptr<TreeNo
     return operand_stack.top();
 }
 
-void Parser::add_node(std::stack<std::shared_ptr<TreeNode>>& stack, char& char_operator)
+void Parser::add_node(std::stack<std::shared_ptr<TreeNode>>& stack, char const& char_operator)
 {
     // ToDo: verifs
-    std::shared_ptr<TreeNode> right = stack.top();
+    std::shared_ptr<TreeNode> const right = stack.top();
     stack.pop();
 
-    std::shared_ptr<TreeNode> left = stack.top();
+    std::shared_ptr<TreeNode> const left = stack.top();
     stack.pop();
 
     stack.push(std::make_shared<TreeNode>(std::string(1, char_operator), left, right));

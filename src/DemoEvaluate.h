@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cmath>
+#include <string>
 #include "TreeNode.h"
 
 namespace mast {
-double evaluateAST(TreeNode tree)
+auto evaluateAST(TreeNode const& tree) -> double
 {
     switch (tree.get_content()[0])
     {
@@ -29,7 +30,7 @@ double evaluateAST(TreeNode tree)
         break;
 
     default:
-        return tree.get_content()[0];
+        return std::stoi(tree.get_content());
         break;
     }
 }
