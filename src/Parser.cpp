@@ -8,7 +8,7 @@ Parser::Parser(std::vector<Operator> const& operators)
 {
     for (const auto& o : operators)
         // ToDo : We will stock string instead of char so we'll get rid of [0]
-        _operators.insert({o.get_symbol()[0], o});
+        _operators.insert({o._symbol[0], o});
 }
 
 auto Parser::expression_to_ast(std::string const& expression) -> std::shared_ptr<TreeNode>
@@ -99,17 +99,16 @@ void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std:
 void Parser::handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char c)
 {
     Operator const o1 = _operators.at(c);
-    Operator*      o2 = nullptr;
 
     while (!operator_stack.empty() && _operators.contains(operator_stack.top()))
     {
-        o2 = &_operators.at(operator_stack.top());
+        Operator const& o2 = _operators.at(operator_stack.top());
 
-        if ((!o1.is_right_associative() && o1.get_precedence() == o2->get_precedence())
-            || o1.get_precedence() > o2->get_precedence())
+        if ((!o1._right_associative && o1._precedence == o2._precedence)
+            || o1._precedence > o2._precedence)
         {
             operator_stack.pop();
-            add_node(operand_stack, o2->get_symbol()[0]);
+            add_node(operand_stack, o2._symbol[0]);
         }
 
         else
