@@ -17,9 +17,11 @@ auto Parser::expression_to_ast(std::string const& expression) -> std::shared_ptr
     std::stack<char>                      operator_stack{};
     std::stack<std::shared_ptr<TreeNode>> operand_stack{};
 
-    for (auto const& c : expression)
+    std::string::const_iterator it;
+    for (it = expression.begin(); it != expression.end(); it++)
     {
-        char popped = 0;
+        char const c      = *it;
+        char       popped = 0;
 
         switch (c)
         {
@@ -41,7 +43,9 @@ auto Parser::expression_to_ast(std::string const& expression) -> std::shared_ptr
             if (_operators.contains(c))
                 handle_operator_cases(operator_stack, operand_stack, c);
             else
-                operand_stack.push(std::make_shared<TreeNode>(std::string(1, c)));
+                // ToDo: handle_function_cases();
+                // ToDo: handle_variable_cases();
+                handle_number_cases(operand_stack, it);
             break;
         }
     }
@@ -94,6 +98,28 @@ void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std:
         add_node(operand_stack, popped);
         break;
     }
+}
+
+void Parser::handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it)
+{
+    auto operand = std::string(1, *it);
+
+    if (!std::isdigit(*it))
+    {
+        operand_stack.push(std::make_shared<TreeNode>(operand));
+        return;
+    }
+
+    // We loop on float content
+    std::string::const_iterator next_character = std::next(it);
+    while (*next_character != 0 && (std::isdigit(*next_character) || *next_character == '.'))
+    {
+        operand.append(std::string(1, *next_character));
+        next_character = std::next(next_character);
+        it = std::next(it);
+    }
+
+    operand_stack.push(std::make_shared<TreeNode>(operand));
 }
 
 void Parser::handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char c)

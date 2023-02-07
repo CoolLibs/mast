@@ -23,7 +23,7 @@ auto evaluateAST(TreeNode const& tree) -> double
         return evaluateAST(tree.get_left_node()) - evaluateAST(tree.get_right_node());
 
     default:
-        return std::stoi(tree.get_content());
+        return std::stof(tree.get_content());
     }
 }
 

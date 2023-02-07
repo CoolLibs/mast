@@ -18,7 +18,9 @@ private:
     static void add_node(std::stack<std::shared_ptr<TreeNode>>& stack, char const& char_operator);
     static void add_nodes_from_stack(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack);
     static void add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char& popped);
-    void handle_operator_cases(std::stack<char>& operand_stack, std::stack<std::shared_ptr<TreeNode>>& operator_stack, char c);
+
+    static void handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it);
+    void handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char c);
 
 private:
     std::map<char, Operator> _operators;
