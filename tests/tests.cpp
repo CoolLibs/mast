@@ -16,7 +16,7 @@ TEST_CASE("Get Expression Test")
 
     auto parser = mast::Parser{operators};
 
-    std::string const expression = "(4 + 23.5)*(3^2)/2";
+    std::string const expression = "(4 + 23.5)*(3^2)/.5";
 
     auto const tree = parser.expression_to_ast(expression);
 

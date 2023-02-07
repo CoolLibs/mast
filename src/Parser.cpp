@@ -102,21 +102,37 @@ void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std:
 
 void Parser::handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it)
 {
-    auto operand = std::string(1, *it);
+    auto operand           = std::string(1, *it);
+    auto is_a_valid_number = [](char const& c) {
+        return std::isdigit(c) || c == '.';
+    };
 
-    if (!std::isdigit(*it))
+    if (!is_a_valid_number(*it))
     {
         operand_stack.push(std::make_shared<TreeNode>(operand));
         return;
     }
 
-    // We loop on float content
+    bool operand_is_a_float = false;
+
+    if (*it == '.') {
+        operand_is_a_float = true;
+        operand.insert(0, std::string(1, '0'));
+    }
+
     std::string::const_iterator next_character = std::next(it);
-    while (*next_character != 0 && (std::isdigit(*next_character) || *next_character == '.'))
+    while (*next_character != 0 && is_a_valid_number(*next_character))
     {
+        if (*next_character == '.')
+        {
+            if (operand_is_a_float)
+                throw std::runtime_error("Multiple dots");
+            operand_is_a_float = true;
+        }
+
         operand.append(std::string(1, *next_character));
         next_character = std::next(next_character);
-        it = std::next(it);
+        it             = std::next(it);
     }
 
     operand_stack.push(std::make_shared<TreeNode>(operand));
