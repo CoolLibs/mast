@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
+#include <map>
 #include <mast/mast.hpp>
 
 // Check out doctest's documentation: https://github.com/doctest/doctest/blob/master/doc/markdown/tutorial.md
@@ -14,13 +15,14 @@ TEST_CASE("Get Expression Test")
     operators.push_back({"+", false, 2});
     operators.push_back({"-", false, 2});
 
-    auto parser = mast::Parser{operators};
+    auto variables = std::vector<char>{'x'};
+    auto parser    = mast::Parser{operators};
 
-    std::string const expression = "(4 + 23.5)*(3^2)/.5";
+    std::string const expression = "(4x + 23.5)*(3^2) / x";
 
-    auto const tree = parser.expression_to_ast(expression);
+    auto const tree = parser.expression_to_ast(expression, variables);
 
-    double const result = mast::evaluateAST(*tree);
+    double const result = mast::evaluate_ast(*tree, std::map<char, double>{{'x', 5.}});
     std::cout << "resultat : " << result;
 
     // CHECK(myTree.get_expression() == "3x+2");

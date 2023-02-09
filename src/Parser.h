@@ -12,14 +12,15 @@ namespace mast {
 class Parser {
 public:
     explicit Parser(std::vector<Operator> const& operators);
-    auto expression_to_ast(std::string const& expression) -> std::shared_ptr<TreeNode>;
+    auto expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> std::shared_ptr<TreeNode>;
 
 private:
-    static void add_node(std::stack<std::shared_ptr<TreeNode>>& stack, char const& char_operator);
+    static auto create_node(std::stack<std::shared_ptr<TreeNode>>& stack, char const& char_operator) -> std::shared_ptr<TreeNode>;
     static void add_nodes_from_stack(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack);
     static void add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char& popped);
 
-    static void handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it);
+    // ToDo: Refacto these parameters
+    static void handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it, std::vector<char> variables);
     void handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char c);
 
 private:

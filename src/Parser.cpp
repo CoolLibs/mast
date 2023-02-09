@@ -11,7 +11,7 @@ Parser::Parser(std::vector<Operator> const& operators)
         _operators.insert({o._symbol[0], o});
 }
 
-auto Parser::expression_to_ast(std::string const& expression) -> std::shared_ptr<TreeNode>
+auto Parser::expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> std::shared_ptr<TreeNode>
 {
     // ToDo : We will stock string instead of char
     std::stack<char>                      operator_stack{};
@@ -44,17 +44,17 @@ auto Parser::expression_to_ast(std::string const& expression) -> std::shared_ptr
                 handle_operator_cases(operator_stack, operand_stack, c);
             else
                 // ToDo: handle_function_cases();
-                // ToDo: handle_variable_cases();
-                handle_number_cases(operand_stack, it);
+                handle_number_cases(operand_stack, it, variables);
             break;
         }
     }
 
     add_nodes_from_stack(operator_stack, operand_stack);
+
     return operand_stack.top();
 }
 
-void Parser::add_node(std::stack<std::shared_ptr<TreeNode>>& stack, char const& char_operator)
+auto Parser::create_node(std::stack<std::shared_ptr<TreeNode>>& stack, char const& char_operator) -> std::shared_ptr<TreeNode>
 {
     // ToDo : Some verifications ?
     std::shared_ptr<TreeNode> const right = stack.top();
@@ -63,10 +63,10 @@ void Parser::add_node(std::stack<std::shared_ptr<TreeNode>>& stack, char const& 
     std::shared_ptr<TreeNode> const left = stack.top();
     stack.pop();
 
-    stack.push(std::make_shared<TreeNode>(
+    return std::make_shared<TreeNode>(
         std::string(1, char_operator),
         mast::TreeNode::ChildrenNodes{left, right}
-    ));
+    );
 }
 
 void Parser::add_nodes_from_stack(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack)
@@ -80,7 +80,7 @@ void Parser::add_nodes_from_stack(std::stack<char>& operator_stack, std::stack<s
             continue;
         }
 
-        add_node(operand_stack, operator_stack.top());
+        operand_stack.push(create_node(operand_stack, operator_stack.top()));
         operator_stack.pop();
     }
 }
@@ -95,39 +95,55 @@ void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std:
         if (popped == '(')
             break;
 
-        add_node(operand_stack, popped);
+        operand_stack.push(create_node(operand_stack, popped));
         break;
     }
 }
 
-void Parser::handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it)
+void Parser::handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it, std::vector<char> variables)
 {
+    // ToDo : Scientific notation
     auto operand           = std::string(1, *it);
     auto is_a_valid_number = [](char const& c) {
         return std::isdigit(c) || c == '.';
     };
+    auto is_a_variable = [&](char const& c) {
+        return std::count(variables.begin(), variables.end(), c);
+    };
 
     if (!is_a_valid_number(*it))
     {
+        if (!is_a_variable(*it))
+            throw std::runtime_error("Not a valid variable name");
+
         operand_stack.push(std::make_shared<TreeNode>(operand));
         return;
     }
 
     bool operand_is_a_float = false;
-
-    if (*it == '.') {
+    if (*it == '.')
+    {
         operand_is_a_float = true;
         operand.insert(0, std::string(1, '0'));
     }
 
     std::string::const_iterator next_character = std::next(it);
-    while (*next_character != 0 && is_a_valid_number(*next_character))
+    while (*next_character != 0 && (is_a_valid_number(*next_character) || is_a_variable(*next_character)))
     {
         if (*next_character == '.')
         {
             if (operand_is_a_float)
                 throw std::runtime_error("Multiple dots");
             operand_is_a_float = true;
+        }
+
+        if (is_a_variable(*next_character))
+        {
+            operand_stack.push(std::make_shared<TreeNode>(operand));
+            operand_stack.push(std::make_shared<TreeNode>(std::string(1, *next_character)));
+            operand_stack.push(create_node(operand_stack, '*'));
+            it = next_character;
+            return;
         }
 
         operand.append(std::string(1, *next_character));
@@ -150,7 +166,7 @@ void Parser::handle_operator_cases(std::stack<char>& operator_stack, std::stack<
             || o1._precedence > o2._precedence)
         {
             operator_stack.pop();
-            add_node(operand_stack, o2._symbol[0]);
+            create_node(operand_stack, o2._symbol[0]);
         }
 
         else
