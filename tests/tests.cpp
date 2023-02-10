@@ -18,12 +18,14 @@ TEST_CASE("Get Expression Test")
     auto variables = std::vector<char>{'x'};
     auto parser    = mast::Parser{operators};
 
-    std::string const expression = "(4x + 23.5)*(3^2) / x";
+    std::string const expression = "(4 + 23.5)*(3^2) / 5";
 
-    auto const tree = parser.expression_to_ast(expression, variables);
+    auto const token_list = mast::tokenize_expression(parser.get_operators(), variables, expression);
 
-    double const result = mast::evaluate_ast(*tree, std::map<char, double>{{'x', 5.}});
-    std::cout << "resultat : " << result;
+    //auto const tree = parser.expression_to_ast(expression, variables);
+
+    //double const result = mast::evaluate_ast(*tree, std::map<char, double>{{'x', 5.}});
+    //std::cout << "resultat : " << result;
 
     // CHECK(myTree.get_expression() == "3x+2");
 }
