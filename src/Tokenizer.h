@@ -1,23 +1,16 @@
 #pragma once
 
+#include <algorithm>
+#include <map>
 #include <memory>
 #include <string>
-#include <algorithm>
 #include <vector>
-#include <map>
-
-#include "Operator.h"
 
 namespace mast {
-
-auto is_a_valid_number(char const& c) -> bool;
-auto is_a_variable(std::vector<char> const& variables, char const& c) -> bool;
-auto is_an_operator(std::map<char, Operator> const& operators, char const& c) -> bool;
 
 class Token {
 public:
     enum class Type {
-        Unknown,
         LeftParenthesis,
         RightParenthesis,
         Number,
@@ -25,7 +18,7 @@ public:
         Variable,
     };
 
-    Token(Type type, std::string content = "")
+    explicit Token(Type type, std::string content = "")
         : _type(type), _content(std::move(content)){};
 
     [[nodiscard]] auto get_type() const -> Type { return _type; };
@@ -36,5 +29,11 @@ private:
     std::string _content;
 };
 
+auto is_a_valid_number(char const& c) -> bool;
+auto is_a_variable(std::vector<char> const& variables, char const& c) -> bool;
+auto is_an_operator(std::map<char, Operator> const& operators, char const& c) -> bool;
+
 auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string const& expression) -> std::vector<Token>;
+auto tokenize_float_and_integers(std::string::const_iterator& it) -> std::string;
+
 } // namespace mast

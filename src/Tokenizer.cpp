@@ -1,4 +1,5 @@
 #include "Tokenizer.h"
+#include "Operator.h"
 
 namespace mast {
 
@@ -38,51 +39,45 @@ auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<
 
         default:
             if (is_an_operator(operators, *it))
-            {
                 tokens_list.emplace_back(Token::Type::Operator, std::string(1, *it));
-                continue;
-            }
 
             if (is_a_valid_number(*it))
-            {
-                std::string operand    = std::string(1, *it);
-                bool        is_a_float = false;
-
-                if (*it == '.')
-                {
-                    is_a_float = true;
-                    operand.insert(0, std::string(1, '0'));
-                }
-
-                std::string::const_iterator next_character = std::next(it);
-                while (*next_character != 0 && (is_a_valid_number(*next_character)))
-                {
-                    if (*next_character == '.')
-                    {
-                        if (is_a_float)
-                            throw std::runtime_error("Error Expression : Multiple dots");
-                        is_a_float = true;
-                    }
-
-                    operand.append(std::string(1, *next_character));
-                    next_character = std::next(next_character);
-                    it             = std::next(it);
-                }
-
-                tokens_list.emplace_back(Token::Type::Number, operand);
-                continue;
-            }
+                tokens_list.emplace_back(Token::Type::Number, tokenize_float_and_integers(it));
 
             if (is_a_variable(variables, *it))
-            {
                 tokens_list.emplace_back(Token::Type::Variable);
-                continue;
-            }
-
-            throw std::runtime_error("Token is not recognized : should never happened");
         }
     }
     return tokens_list;
+}
+
+auto tokenize_float_and_integers(std::string::const_iterator& it) -> std::string
+{
+    std::string operand    = std::string(1, *it);
+    bool        is_a_float = false;
+
+    if (*it == '.')
+    {
+        is_a_float = true;
+        operand.insert(0, std::string(1, '0'));
+    }
+
+    std::string::const_iterator next_character = std::next(it);
+    while (*next_character != 0 && (is_a_valid_number(*next_character)))
+    {
+        if (*next_character == '.')
+        {
+            if (is_a_float)
+                throw std::runtime_error("Error Expression : Multiple dots");
+            is_a_float = true;
+        }
+
+        operand.append(std::string(1, *next_character));
+        next_character = std::next(next_character);
+        it             = std::next(it);
+    }
+
+    return operand;
 }
 
 } // namespace mast

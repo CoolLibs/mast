@@ -1,63 +1,58 @@
 #include "Parser.h"
 #include <memory>
 #include <stdexcept>
+#include "tools/utils.h"
 
 namespace mast {
 
 Parser::Parser(std::vector<Operator> const& operators)
 {
     for (const auto& o : operators)
-        // ToDo : We will stock string instead of char so we'll get rid of [0]
-        _operators.insert({o._symbol[0], o});
+        _operators.insert({o._symbol, o});
 }
 
 auto Parser::expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> std::shared_ptr<TreeNode>
 {
-    std::stack<char>                      operator_stack{};
-    std::stack<std::shared_ptr<TreeNode>> operand_stack{};
-
-    auto const token_list = mast::tokenize_expression(_operators, variables, expression);
+    auto const                  token_list = mast::tokenize_expression(_operators, variables, expression);
+    std::stack<TreeNodePointer> operands{};
+    std::stack<char>            operators{};
 
     for (auto const& token : token_list)
     {
-        char popped = 0;
-
         switch (token.get_type())
         {
         case Token::Type::LeftParenthesis:
-            operator_stack.push('(');
+            operators.push('(');
             break;
 
         case Token::Type::RightParenthesis:
-            add_nodes_inside_parenthesis(operator_stack, operand_stack, popped);
-
-            if (operator_stack.empty())
+            add_nodes_inside_parenthesis(operators, operands);
+            if (operators.empty())
                 throw std::runtime_error("Unbalanced right parentheses");
             break;
 
         case Token::Type::Operator:
-            handle_operator_cases(operator_stack, operand_stack, token.get_content());
+            handle_operator_cases(operators, operands, token.get_content());
+            break;
+
+        case Token::Type::Number:
+            operands.push(std::make_shared<TreeNode>(token.get_content()));
             break;
 
         default:
-            // ToDo: handle_function_cases();
-            handle_number_cases(operand_stack, variables, token.get_content());
+            break;
         }
     }
 
-    add_nodes_from_stack(operator_stack, operand_stack);
-
-    return operand_stack.top();
+    add_nodes_from_stack(operators, operands);
+    return operands.top();
 }
 
-auto Parser::create_node(std::stack<std::shared_ptr<TreeNode>>& stack, char const& char_operator) -> std::shared_ptr<TreeNode>
+auto Parser::create_node(std::stack<TreeNodePointer>& stack, char const& char_operator) -> TreeNodePointer
 {
     // ToDo : Some verifications ?
-    std::shared_ptr<TreeNode> const right = stack.top();
-    stack.pop();
-
-    std::shared_ptr<TreeNode> const left = stack.top();
-    stack.pop();
+    auto const right = pop_and_get_top(stack);
+    auto const left  = pop_and_get_top(stack);
 
     return std::make_shared<TreeNode>(
         std::string(1, char_operator),
@@ -65,27 +60,26 @@ auto Parser::create_node(std::stack<std::shared_ptr<TreeNode>>& stack, char cons
     );
 }
 
-void Parser::add_nodes_from_stack(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack)
+void Parser::add_nodes_from_stack(std::stack<char>& operators, std::stack<TreeNodePointer>& operands)
 {
-    while (!operator_stack.empty())
+    while (!operators.empty())
     {
-        // ToDo : This verification was not in the java example ?
-        if (operator_stack.top() == '(')
+        if (operators.top() == '(')
         {
-            operator_stack.pop();
+            operators.pop();
             continue;
         }
 
-        operand_stack.push(create_node(operand_stack, operator_stack.top()));
-        operator_stack.pop();
+        operands.push(create_node(operands, operators.top()));
+        operators.pop();
     }
 }
 
-void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char& popped)
+void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std::stack<TreeNodePointer>& operand_stack)
 {
     while (!operator_stack.empty())
     {
-        popped = operator_stack.top();
+        char const popped = operator_stack.top();
         operator_stack.pop();
 
         if (popped == '(')
@@ -96,28 +90,19 @@ void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std:
     }
 }
 
-void Parser::handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, const std::vector<char>& variables, std::string const& token_content)
+void Parser::handle_operator_cases(std::stack<char>& operator_stack, std::stack<TreeNodePointer>& operand_stack, std::string token_content)
 {
-    operand_stack.push(std::make_shared<TreeNode>(token_content));
-}
-
-void Parser::handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string token_content)
-{
+    // Operator has a char
     Operator const o1 = _operators.at(token_content[0]);
 
     while (!operator_stack.empty() && _operators.contains(operator_stack.top()))
     {
         Operator const& o2 = _operators.at(operator_stack.top());
-
-        if ((!o1._right_associative && o1._precedence == o2._precedence)
-            || o1._precedence > o2._precedence)
+        if ((!o1._right_associative && o1._precedence == o2._precedence) || o1._precedence > o2._precedence)
         {
             operator_stack.pop();
-            create_node(operand_stack, o2._symbol[0]);
+            create_node(operand_stack, o2._symbol);
         }
-
-        else
-            continue;
     }
 
     operator_stack.push(token_content[0]);
