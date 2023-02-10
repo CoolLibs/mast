@@ -79,8 +79,7 @@ auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<
                 continue;
             }
 
-            throw std::runtime_error("Shouldn't happened");
-            break;
+            throw std::runtime_error("Token is not recognized : should never happened");
         }
     }
     return tokens_list;

@@ -21,8 +21,8 @@ private:
     static void add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char& popped);
 
     // ToDo: Refacto these parameters
-    static void handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it, std::vector<char> variables);
-    void handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char c);
+    static void handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, const std::vector<char>& variables, std::string const& token_content);
+    void handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string token_content);
 
 private:
     std::map<char, Operator> _operators;

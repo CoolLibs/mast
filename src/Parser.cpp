@@ -13,39 +13,35 @@ Parser::Parser(std::vector<Operator> const& operators)
 
 auto Parser::expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> std::shared_ptr<TreeNode>
 {
-    // ToDo : We will stock string instead of char
     std::stack<char>                      operator_stack{};
     std::stack<std::shared_ptr<TreeNode>> operand_stack{};
 
-    std::string::const_iterator it;
-    for (it = expression.begin(); it != expression.end(); it++)
+    auto const token_list = mast::tokenize_expression(_operators, variables, expression);
+
+    for (auto const& token : token_list)
     {
-        char const c      = *it;
-        char       popped = 0;
+        char popped = 0;
 
-        switch (c)
+        switch (token.get_type())
         {
-        case ' ':
-            break;
-
-        case '(':
+        case Token::Type::LeftParenthesis:
             operator_stack.push('(');
             break;
 
-        case ')':
+        case Token::Type::RightParenthesis:
             add_nodes_inside_parenthesis(operator_stack, operand_stack, popped);
 
             if (operator_stack.empty())
                 throw std::runtime_error("Unbalanced right parentheses");
             break;
 
-        default:
-            if (_operators.contains(c))
-                handle_operator_cases(operator_stack, operand_stack, c);
-            else
-                // ToDo: handle_function_cases();
-                handle_number_cases(operand_stack, it, variables);
+        case Token::Type::Operator:
+            handle_operator_cases(operator_stack, operand_stack, token.get_content());
             break;
+
+        default:
+            // ToDo: handle_function_cases();
+            handle_number_cases(operand_stack, variables, token.get_content());
         }
     }
 
@@ -100,63 +96,14 @@ void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std:
     }
 }
 
-void Parser::handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it, std::vector<char> variables)
+void Parser::handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, const std::vector<char>& variables, std::string const& token_content)
 {
-    // ToDo : Scientific notation
-    auto operand           = std::string(1, *it);
-    auto is_a_valid_number = [](char const& c) {
-        return std::isdigit(c) || c == '.';
-    };
-    auto is_a_variable = [&](char const& c) {
-        return std::count(variables.begin(), variables.end(), c);
-    };
-
-    if (!is_a_valid_number(*it))
-    {
-        if (!is_a_variable(*it))
-            throw std::runtime_error("Not a valid variable name");
-
-        operand_stack.push(std::make_shared<TreeNode>(operand));
-        return;
-    }
-
-    bool operand_is_a_float = false;
-    if (*it == '.')
-    {
-        operand_is_a_float = true;
-        operand.insert(0, std::string(1, '0'));
-    }
-
-    std::string::const_iterator next_character = std::next(it);
-    while (*next_character != 0 && (is_a_valid_number(*next_character) || is_a_variable(*next_character)))
-    {
-        if (*next_character == '.')
-        {
-            if (operand_is_a_float)
-                throw std::runtime_error("Multiple dots");
-            operand_is_a_float = true;
-        }
-
-        if (is_a_variable(*next_character))
-        {
-            operand_stack.push(std::make_shared<TreeNode>(operand));
-            operand_stack.push(std::make_shared<TreeNode>(std::string(1, *next_character)));
-            operand_stack.push(create_node(operand_stack, '*'));
-            it = next_character;
-            return;
-        }
-
-        operand.append(std::string(1, *next_character));
-        next_character = std::next(next_character);
-        it             = std::next(it);
-    }
-
-    operand_stack.push(std::make_shared<TreeNode>(operand));
+    operand_stack.push(std::make_shared<TreeNode>(token_content));
 }
 
-void Parser::handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char c)
+void Parser::handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string token_content)
 {
-    Operator const o1 = _operators.at(c);
+    Operator const o1 = _operators.at(token_content[0]);
 
     while (!operator_stack.empty() && _operators.contains(operator_stack.top()))
     {
@@ -173,7 +120,7 @@ void Parser::handle_operator_cases(std::stack<char>& operator_stack, std::stack<
             continue;
     }
 
-    operator_stack.push(c);
+    operator_stack.push(token_content[0]);
 }
 
 } // namespace mast
