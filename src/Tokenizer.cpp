@@ -1,5 +1,4 @@
 #include "Tokenizer.h"
-#include "Operator.h"
 
 namespace mast {
 
@@ -45,7 +44,7 @@ auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<
                 tokens_list.emplace_back(Token::Type::Number, tokenize_float_and_integers(it));
 
             if (is_a_variable(variables, *it))
-                tokens_list.emplace_back(Token::Type::Variable);
+                tokens_list.emplace_back(Token::Type::Variable, std::string(1, *it));
         }
     }
     return tokens_list;

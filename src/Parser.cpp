@@ -17,8 +17,10 @@ auto Parser::expression_to_ast(std::string const& expression, std::vector<char> 
     std::stack<TreeNodePointer> operands{};
     std::stack<char>            operators{};
 
-    for (auto const& token : token_list)
+    std::vector<Token>::const_iterator it;
+    for (it = token_list.begin(); it != token_list.end(); it++)
     {
+        Token const& token = *it;
         switch (token.get_type())
         {
         case Token::Type::LeftParenthesis:
@@ -36,6 +38,10 @@ auto Parser::expression_to_ast(std::string const& expression, std::vector<char> 
             break;
 
         case Token::Type::Number:
+            handle_number_cases(operands, it);
+            break;
+
+        case Token::Type::Variable:
             operands.push(std::make_shared<TreeNode>(token.get_content()));
             break;
 
@@ -90,22 +96,36 @@ void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std:
     }
 }
 
-void Parser::handle_operator_cases(std::stack<char>& operator_stack, std::stack<TreeNodePointer>& operand_stack, std::string token_content)
+void Parser::handle_operator_cases(std::stack<char>& operators, std::stack<TreeNodePointer>& operands, std::string token_content)
 {
     // Operator has a char
     Operator const o1 = _operators.at(token_content[0]);
 
-    while (!operator_stack.empty() && _operators.contains(operator_stack.top()))
+    while (!operators.empty() && _operators.contains(operators.top()))
     {
-        Operator const& o2 = _operators.at(operator_stack.top());
+        Operator const& o2 = _operators.at(operators.top());
         if ((!o1._right_associative && o1._precedence == o2._precedence) || o1._precedence > o2._precedence)
         {
-            operator_stack.pop();
-            create_node(operand_stack, o2._symbol);
+            operators.pop();
+            create_node(operands, o2._symbol);
         }
     }
 
-    operator_stack.push(token_content[0]);
+    operators.push(token_content[0]);
+}
+
+void Parser::handle_number_cases(std::stack<TreeNodePointer>& operands, std::vector<Token>::const_iterator& it)
+{
+    auto const& next_token = std::next(it);
+    if (next_token->get_type() == Token::Type::Variable) {
+        operands.push(std::make_shared<TreeNode>(it->get_content()));
+        operands.push(std::make_shared<TreeNode>(next_token->get_content()));
+        operands.push(create_node(operands, '*'));
+        it = next_token;
+        return;
+    }
+
+    operands.push(std::make_shared<TreeNode>(it->get_content()));
 }
 
 } // namespace mast

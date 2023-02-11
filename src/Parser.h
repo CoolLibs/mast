@@ -22,7 +22,8 @@ private:
     static auto create_node(std::stack<TreeNodePointer>& stack, char const& char_operator) -> TreeNodePointer;
     static void add_nodes_from_stack(std::stack<char>& operators, std::stack<TreeNodePointer>& operands);
     static void add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std::stack<TreeNodePointer>& operand_stack);
-    void        handle_operator_cases(std::stack<char>& operator_stack, std::stack<TreeNodePointer>& operand_stack, std::string token_content);
+    void        handle_operator_cases(std::stack<char>& operators, std::stack<TreeNodePointer>& operands, std::string token_content);
+    static void handle_number_cases(std::stack<TreeNodePointer>& operands, std::vector<Token>::const_iterator& it);
 
 private:
     std::map<char, Operator> _operators;
