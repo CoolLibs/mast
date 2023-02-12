@@ -35,6 +35,6 @@ auto is_a_variable(std::vector<char> const& variables, char const& c) -> bool;
 auto is_an_operator(std::map<char, Operator> const& operators, char const& c) -> bool;
 
 auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string const& expression) -> std::vector<Token>;
-auto tokenize_float_and_integers(std::string::const_iterator& it) -> std::string;
+auto tokenize_numbers(std::string::const_iterator& it) -> std::string;
 
 } // namespace mast

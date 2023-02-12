@@ -1,6 +1,7 @@
 #include "Parser.h"
 #include <memory>
 #include <stdexcept>
+#include "tools/correct.h"
 #include "tools/utils.h"
 
 namespace mast {
@@ -11,24 +12,6 @@ Parser::Parser(std::vector<Operator> const& operators)
         _operators.insert({o._symbol, o});
 }
 
-void Parser::correct_token_list(std::vector<Token>& tokens_list)
-{
-    for (auto it = tokens_list.begin(); it != tokens_list.end(); it++)
-    {
-        /****** Add * in implicit multiplication ******/
-        if (it->get_type() == Token::Type::Number)
-        {
-            // Before variable
-            if (std::next(it)->get_type() == Token::Type::Variable)
-                it = tokens_list.emplace(it + 1, Token::Type::Operator, "*");
-
-            // Before ()
-            if (std::next(it)->get_type() == Token::Type::LeftParenthesis)
-                it = tokens_list.emplace(it + 1, Token::Type::Operator, "*");
-        }
-    }
-}
-
 auto Parser::expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> std::shared_ptr<TreeNode>
 {
     auto                        token_list = mast::tokenize_expression(_operators, variables, expression);
@@ -37,10 +20,10 @@ auto Parser::expression_to_ast(std::string const& expression, std::vector<char> 
 
     correct_token_list(token_list);
 
-    for (auto it = token_list.begin(); it != token_list.end(); it++)
+    for (auto const& token : token_list)
     {
-        std::string const& token_content = it->get_content();
-        switch (it->get_type())
+        std::string const& token_content = token.get_content();
+        switch (token.get_type())
         {
         case Token::Type::LeftParenthesis:
             operators.push('(');
@@ -56,9 +39,6 @@ auto Parser::expression_to_ast(std::string const& expression, std::vector<char> 
             break;
 
         case Token::Type::Number:
-            operands.push(std::make_shared<TreeNode>(token_content));
-            break;
-
         case Token::Type::Variable:
             operands.push(std::make_shared<TreeNode>(token_content));
             break;
@@ -119,15 +99,6 @@ void Parser::add_nodes_from_stacks(std::stack<char>& operators, std::stack<TreeN
         else
             break;
     }
-}
-
-void Parser::create_and_add_node_with_next_token_content(std::stack<TreeNodePointer>& operands, std::vector<Token>::const_iterator& it, char const& wanted_operator)
-{
-    auto const& next_token = std::next(it);
-    operands.push(std::make_shared<TreeNode>(it->get_content()));
-    operands.push(std::make_shared<TreeNode>(next_token->get_content()));
-    add_node(operands, wanted_operator);
-    it = next_token;
 }
 
 } // namespace mast
