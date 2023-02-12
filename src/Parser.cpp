@@ -29,16 +29,41 @@ auto Parser::expression_to_ast(std::string const& expression, std::vector<char> 
 
         case Token::Type::RightParenthesis:
             add_nodes_inside_parenthesis(operators, operands);
-            if (operators.empty())
-                throw std::runtime_error("Unbalanced right parentheses");
             break;
 
         case Token::Type::Operator:
-            handle_operator_cases(operators, operands, token.get_content());
+        {
+            Operator const fetched_operator = _operators.at(token.get_content()[0]);
+
+            // While operator stack doesn't contain any operator (can still have parenthesis)
+            while (!operators.empty() && _operators.contains(operators.top()))
+            {
+                Operator const last_operator = _operators.at(operators.top());
+
+                if ((!fetched_operator._right_associative && fetched_operator._precedence == last_operator._precedence) || (fetched_operator._precedence < last_operator._precedence))
+                {
+                    operators.pop();
+                    operands.push(create_node(operands, last_operator._symbol));
+                }
+
+                else
+                    break;
+            }
+
+            // We push in the operator stack the current operator
+            operators.push(token.get_content()[0]);
+            // handle_operator_cases(operators, operands, token.get_content());
             break;
+        }
 
         case Token::Type::Number:
-            handle_number_cases(operands, it);
+            // Handle "4x" case
+            if (std::next(it)->get_type() == Token::Type::Variable)
+            {
+                add_node_with_next_token(operands, it, '*');
+                break;
+            }
+            operands.push(std::make_shared<TreeNode>(token.get_content()));
             break;
 
         case Token::Type::Variable:
@@ -50,15 +75,17 @@ auto Parser::expression_to_ast(std::string const& expression, std::vector<char> 
         }
     }
 
-    add_nodes_from_stack(operators, operands);
+    while (!operators.empty() && _operators.contains(operators.top()))
+        operands.push(create_node(operands, pop_and_get_top(operators)));
+
     return operands.top();
 }
 
-auto Parser::create_node(std::stack<TreeNodePointer>& stack, char const& char_operator) -> TreeNodePointer
+auto Parser::create_node(std::stack<TreeNodePointer>& operands, char const& char_operator) -> TreeNodePointer
 {
     // ToDo : Some verifications ?
-    auto const right = pop_and_get_top(stack);
-    auto const left  = pop_and_get_top(stack);
+    auto const right = pop_and_get_top(operands);
+    auto const left  = pop_and_get_top(operands);
 
     return std::make_shared<TreeNode>(
         std::string(1, char_operator),
@@ -66,34 +93,21 @@ auto Parser::create_node(std::stack<TreeNodePointer>& stack, char const& char_op
     );
 }
 
-void Parser::add_nodes_from_stack(std::stack<char>& operators, std::stack<TreeNodePointer>& operands)
+void Parser::add_nodes_inside_parenthesis(std::stack<char>& operators, std::stack<TreeNodePointer>& operands)
 {
+    char current_operator = 0;
     while (!operators.empty())
     {
-        if (operators.top() == '(')
-        {
-            operators.pop();
-            continue;
-        }
+        current_operator = pop_and_get_top(operators);
 
-        operands.push(create_node(operands, operators.top()));
-        operators.pop();
-    }
-}
-
-void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std::stack<TreeNodePointer>& operand_stack)
-{
-    while (!operator_stack.empty())
-    {
-        char const popped = operator_stack.top();
-        operator_stack.pop();
-
-        if (popped == '(')
+        if (current_operator == '(')
             break;
 
-        operand_stack.push(create_node(operand_stack, popped));
-        break;
+        operands.push(create_node(operands, current_operator));
     }
+
+    if (operators.empty() && current_operator != '(')
+        throw std::runtime_error("Unbalanced right parentheses");
 }
 
 void Parser::handle_operator_cases(std::stack<char>& operators, std::stack<TreeNodePointer>& operands, std::string token_content)
@@ -107,25 +121,23 @@ void Parser::handle_operator_cases(std::stack<char>& operators, std::stack<TreeN
         if ((!o1._right_associative && o1._precedence == o2._precedence) || o1._precedence > o2._precedence)
         {
             operators.pop();
-            create_node(operands, o2._symbol);
+            operands.push(create_node(operands, o2._symbol));
         }
+
+        else
+            break;
     }
 
     operators.push(token_content[0]);
 }
 
-void Parser::handle_number_cases(std::stack<TreeNodePointer>& operands, std::vector<Token>::const_iterator& it)
+void Parser::add_node_with_next_token(std::stack<TreeNodePointer>& operands, std::vector<Token>::const_iterator& it, char const& wanted_operator)
 {
     auto const& next_token = std::next(it);
-    if (next_token->get_type() == Token::Type::Variable) {
-        operands.push(std::make_shared<TreeNode>(it->get_content()));
-        operands.push(std::make_shared<TreeNode>(next_token->get_content()));
-        operands.push(create_node(operands, '*'));
-        it = next_token;
-        return;
-    }
-
     operands.push(std::make_shared<TreeNode>(it->get_content()));
+    operands.push(std::make_shared<TreeNode>(next_token->get_content()));
+    operands.push(create_node(operands, wanted_operator));
+    it = next_token;
 }
 
 } // namespace mast

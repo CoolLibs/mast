@@ -19,11 +19,10 @@ public:
     [[nodiscard]] auto get_operators() const -> std::map<char, Operator> { return _operators; };
 
 private:
-    static auto create_node(std::stack<TreeNodePointer>& stack, char const& char_operator) -> TreeNodePointer;
-    static void add_nodes_from_stack(std::stack<char>& operators, std::stack<TreeNodePointer>& operands);
-    static void add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std::stack<TreeNodePointer>& operand_stack);
+    static auto create_node(std::stack<TreeNodePointer>& operands, char const& char_operator) -> TreeNodePointer;
+    static void add_nodes_inside_parenthesis(std::stack<char>& operators, std::stack<TreeNodePointer>& operands);
     void        handle_operator_cases(std::stack<char>& operators, std::stack<TreeNodePointer>& operands, std::string token_content);
-    static void handle_number_cases(std::stack<TreeNodePointer>& operands, std::vector<Token>::const_iterator& it);
+    static void add_node_with_next_token(std::stack<TreeNodePointer>& operands, std::vector<Token>::const_iterator& it, char const& wanted_operator);
 
 private:
     std::map<char, Operator> _operators;
