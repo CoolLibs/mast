@@ -19,9 +19,8 @@ auto is_an_operator(std::map<char, Operator> const& operators, char const& c) ->
 
 auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string const& expression) -> std::vector<Token>
 {
-    std::vector<Token>          tokens_list{};
-    std::string::const_iterator it;
-    for (it = expression.begin(); it != expression.end(); it++)
+    std::vector<Token> tokens_list{};
+    for (auto it = expression.begin(); it != expression.end(); it++)
     {
         switch (*it)
         {

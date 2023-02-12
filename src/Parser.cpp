@@ -11,11 +11,31 @@ Parser::Parser(std::vector<Operator> const& operators)
         _operators.insert({o._symbol, o});
 }
 
+void Parser::correct_token_list(std::vector<Token>& tokens_list)
+{
+    for (auto it = tokens_list.begin(); it != tokens_list.end(); it++)
+    {
+        /****** Add * in implicit multiplication ******/
+        if (it->get_type() == Token::Type::Number)
+        {
+            // Before variable
+            if (std::next(it)->get_type() == Token::Type::Variable)
+                it = tokens_list.emplace(it + 1, Token::Type::Operator, "*");
+
+            // Before ()
+            if (std::next(it)->get_type() == Token::Type::LeftParenthesis)
+                it = tokens_list.emplace(it + 1, Token::Type::Operator, "*");
+        }
+    }
+}
+
 auto Parser::expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> std::shared_ptr<TreeNode>
 {
-    auto const                  token_list = mast::tokenize_expression(_operators, variables, expression);
+    auto                        token_list = mast::tokenize_expression(_operators, variables, expression);
     std::stack<TreeNodePointer> operands{};
     std::stack<char>            operators{};
+
+    correct_token_list(token_list);
 
     for (auto it = token_list.begin(); it != token_list.end(); it++)
     {
@@ -36,13 +56,6 @@ auto Parser::expression_to_ast(std::string const& expression, std::vector<char> 
             break;
 
         case Token::Type::Number:
-            // Handle "4x" case
-            if (std::next(it)->get_type() == Token::Type::Variable)
-            {
-                create_and_add_node_with_next_token_content(operands, it, '*');
-                break;
-            }
-
             operands.push(std::make_shared<TreeNode>(token_content));
             break;
 
@@ -102,6 +115,9 @@ void Parser::add_nodes_from_stacks(std::stack<char>& operators, std::stack<TreeN
             operators.pop();
             add_node(operands, last_operator._symbol);
         }
+
+        else
+            break;
     }
 }
 

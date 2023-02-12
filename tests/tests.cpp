@@ -9,7 +9,6 @@ TEST_CASE("Get Expression Test")
 {
     auto operators = std::vector<mast::Operator>{};
     // ToDo : Get a more flexible precedence
-    // ToDo : right associative in default parameter
     operators.push_back({'^', 4, true});
     operators.push_back({'*', 3});
     operators.push_back({'/', 3});
@@ -19,9 +18,24 @@ TEST_CASE("Get Expression Test")
     auto variables = std::vector<char>{'x'};
     auto parser    = mast::Parser{operators};
 
-    std::string const expression = "(4x + 23.5)*(3^2) / x";
-    auto const        tree       = parser.expression_to_ast(expression, variables);
-    double const      result     = mast::evaluate_ast(*tree, std::map<char, double>{{'x', 5.}});
-    std::cout << "resultat : " << result;
-    CHECK(result == 78.3);
+    std::string const expression = "(4x + 23.5)*(3^2) / (1 + x^2)";
+    double const      result     = mast::evaluate_ast(
+        *parser.expression_to_ast(expression, variables),
+        std::map<char, double>{{'x', 5.}}
+    );
+    CHECK(true == std::abs(15.0576923077 - result) < 0.0001);
+
+    std::string const expression_factorization = "4(3.25x)";
+    double const      result_factorization     = mast::evaluate_ast(
+        *parser.expression_to_ast(expression_factorization, variables),
+        std::map<char, double>{{'x', 5.}}
+    );
+    CHECK(result_factorization == 65);
+
+    std::string const expression_var_pow = "(4x^2 + 23.5)*(3^2) / (1 + x^2)";
+    double const      result_var_pow     = mast::evaluate_ast(
+        *parser.expression_to_ast(expression_var_pow, variables),
+        std::map<char, double>{{'x', 5.}}
+    );
+    CHECK(result_var_pow == 42.75);
 }
