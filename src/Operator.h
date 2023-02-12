@@ -6,9 +6,9 @@
 namespace mast {
 
 struct Operator {
-    char   _symbol;
-    bool   _right_associative;
-    int8_t _precedence;
+    char   _symbol{};
+    int8_t _precedence{};
+    bool   _right_associative = false;
 };
 
 } // namespace mast

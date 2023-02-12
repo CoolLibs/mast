@@ -23,7 +23,6 @@ auto evaluate_ast(TreeNode const& tree, std::map<char, double> variables_result)
         return evaluate_ast(tree.get_left_node(), variables_result) - evaluate_ast(tree.get_right_node(), variables_result);
 
     default:
-
         if (variables_result.contains(tree.get_content()[0]))
             return variables_result.at(tree.get_content()[0]);
         else

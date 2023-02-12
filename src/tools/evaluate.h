@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cmath>
-#include <string>
 #include <map>
+#include <string>
 #include "../TreeNode.h"
 
 namespace mast {
