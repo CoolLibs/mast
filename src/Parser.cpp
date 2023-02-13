@@ -1,7 +1,7 @@
 #include "Parser.h"
 #include <memory>
 #include <stdexcept>
-#include "tools/correct.h"
+#include "tools/expressions/correct.h"
 #include "tools/utils.h"
 
 namespace mast {
@@ -50,7 +50,7 @@ auto Parser::expression_to_ast(std::string const& expression, std::vector<char> 
 
     // Create nodes from stacks
     while (!operators.empty() && _operators.contains(operators.top()))
-        add_node(operands, pop_and_get_top(operators));
+        add_node(operands, get_top_and_pop(operators));
 
     return operands.top();
 }
@@ -58,8 +58,8 @@ auto Parser::expression_to_ast(std::string const& expression, std::vector<char> 
 void Parser::add_node(std::stack<TreeNodePointer>& operands, char const& char_operator)
 {
     // ToDo : Should I do verifications ?
-    auto const right = pop_and_get_top(operands);
-    auto const left  = pop_and_get_top(operands);
+    auto const right = get_top_and_pop(operands);
+    auto const left  = get_top_and_pop(operands);
 
     operands.push(std::make_shared<TreeNode>(
         std::string(1, char_operator),
@@ -72,7 +72,7 @@ void Parser::add_nodes_from_parenthesis_content(std::stack<char>& operators, std
     char current_operator = 0;
     while (!operators.empty())
     {
-        current_operator = pop_and_get_top(operators);
+        current_operator = get_top_and_pop(operators);
         if (current_operator == '(')
             break;
 

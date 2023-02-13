@@ -3,7 +3,7 @@
 #include <cmath>
 #include <map>
 #include <string>
-#include "../TreeNode.h"
+#include "../../TreeNode.h"
 
 namespace mast {
 
