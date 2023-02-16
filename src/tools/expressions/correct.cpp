@@ -1,4 +1,5 @@
 #include "correct.h"
+#include <stdexcept>
 
 namespace mast {
 
