@@ -8,7 +8,7 @@
 TEST_CASE("Get Expression Test")
 {
     auto operators = std::vector<mast::Operator>{};
-    // ToDo : Get a more flexible precedence
+    // ToDo : Get a more flexible precedence -> wrapper qui fait ce push back auto
     operators.push_back({'^', 4, true});
     operators.push_back({'*', 3});
     operators.push_back({'/', 3});

@@ -22,7 +22,6 @@ void correct_token_list(std::list<Token>& tokens_list)
 
 void throw_error_on_multiple_dots_number(std::string token_content)
 {
-    // ToDo : Better exception
     if (std::count(token_content.begin(), token_content.end(), '.') > 1)
         throw std::runtime_error("Error Expression : Multiple dots");
 };

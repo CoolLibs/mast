@@ -32,6 +32,6 @@ private:
 };
 
 auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string const& expression) -> std::list<Token>;
-auto tokenize_numbers(std::string::const_iterator& it) -> std::string;
+auto tokenize_numbers(std::string::const_iterator& it, std::string::const_iterator end) -> std::string;
 
 } // namespace mast

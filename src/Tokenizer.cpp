@@ -29,7 +29,7 @@ auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<
                 tokens_list.emplace_back(Token::Type::Operator, std::string(1, *it));
 
             if (is_a_valid_number(*it))
-                tokens_list.emplace_back(Token::Type::Number, tokenize_numbers(it));
+                tokens_list.emplace_back(Token::Type::Number, tokenize_numbers(it, expression.end()));
 
             if (is_a_variable(variables, *it))
                 tokens_list.emplace_back(Token::Type::Variable, std::string(1, *it));
@@ -39,12 +39,12 @@ auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<
     return tokens_list;
 }
 
-auto tokenize_numbers(std::string::const_iterator& it) -> std::string
+auto tokenize_numbers(std::string::const_iterator& it, std::string::const_iterator end) -> std::string
 {
     std::string operand = std::string(1, *it);
 
     std::string::const_iterator next_character = std::next(it);
-    while (*next_character != 0 && (is_a_valid_number(*next_character)))
+    while (next_character != end && (is_a_valid_number(*next_character)))
     {
         operand.append(std::string(1, *next_character));
         next_character = std::next(next_character);
