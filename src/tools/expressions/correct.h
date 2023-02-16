@@ -1,14 +1,13 @@
 #pragma once
 
-#include <vector>
 #include <list>
+#include <vector>
 #include "../../Tokenizer.h"
 
 namespace mast {
 
 void correct_token_list(std::list<Token>& tokens_list);
-
 void throw_error_on_multiple_dots_number(std::string token_content);
-void handle_implicit_multiplication(std::list<Token>& tokens_list, std::list<Token>::const_iterator current);
+void handle_implicit_multiplications(std::list<Token>& tokens_list, std::list<Token>::const_iterator current);
 
 } // namespace mast

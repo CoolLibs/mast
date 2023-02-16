@@ -10,8 +10,6 @@
 
 namespace mast {
 
-using TreeNodePointer = std::shared_ptr<TreeNode>;
-
 class Parser {
 public:
     explicit Parser(std::vector<Operator> const& operators);

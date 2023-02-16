@@ -12,7 +12,7 @@ Parser::Parser(std::vector<Operator> const& operators)
         _operators.insert({o._symbol, o});
 }
 
-auto Parser::expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> std::shared_ptr<TreeNode>
+auto Parser::expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> TreeNodePointer
 {
     auto                        token_list = mast::tokenize_expression(_operators, variables, expression);
     std::stack<TreeNodePointer> operands{};
@@ -62,7 +62,7 @@ void Parser::add_node(std::stack<TreeNodePointer>& operands, char const& char_op
 
     operands.push(std::make_shared<TreeNode>(
         std::string(1, char_operator),
-        mast::TreeNode::ChildrenNodes{left, right}
+        std::vector<TreeNodePointer>{left, right}
     ));
 }
 

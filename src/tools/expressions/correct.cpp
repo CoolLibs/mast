@@ -15,7 +15,7 @@ void correct_token_list(std::list<Token>& tokens_list)
             it->get_content().insert(1, "0");
 
         // Add * in implicits multiplications
-        handle_implicit_multiplication(tokens_list, it);
+        handle_implicit_multiplications(tokens_list, it);
     }
 }
 
@@ -26,27 +26,19 @@ void throw_error_on_multiple_dots_number(std::string token_content)
         throw std::runtime_error("Error Expression : Multiple dots");
 };
 
-void handle_implicit_multiplication(std::list<Token>& tokens_list, std::list<Token>::const_iterator current)
+void handle_implicit_multiplications(std::list<Token>& tokens_list, std::list<Token>::const_iterator current)
 {
     auto next_it = std::next(current);
 
-    // ToDo : refacto "_impl" lambda !!!!! "implicit_mult_between(var,num)"
-
-    // x(x+2)
-    if (current->get_type() == Token::Type::Variable)
-        if (next_it->get_type() == Token::Type::LeftParenthesis)
+    const auto handle_implicit_multiplication_between = [&](Token::Type first_type, std::vector<Token::Type> other_types) {
+        if (current->get_type() == first_type
+            && std::find(other_types.begin(), other_types.end(), next_it->get_type()) != other_types.end())
             tokens_list.emplace(next_it, Token::Type::Operator, "*");
+    };
 
-    // 4.34x AND 4.43(x+1)
-    if (current->get_type() == Token::Type::Number)
-        if (next_it->get_type() == Token::Type::Variable || next_it->get_type() == Token::Type::LeftParenthesis)
-            tokens_list.emplace(next_it, Token::Type::Operator, "*");
-
-    // (x+1)x AND (x+1)4.3
-    if (current->get_type() == Token::Type::RightParenthesis)
-        if (next_it->get_type() == Token::Type::Variable || next_it->get_type() == Token::Type::Number)
-            tokens_list.emplace(next_it, Token::Type::Operator, "*");
-
+    handle_implicit_multiplication_between(Token::Type::Variable, {Token::Type::LeftParenthesis});
+    handle_implicit_multiplication_between(Token::Type::Number, {Token::Type::Variable, Token::Type::LeftParenthesis});
+    handle_implicit_multiplication_between(Token::Type::RightParenthesis, {Token::Type::Number});
 }
 
 } // namespace mast
