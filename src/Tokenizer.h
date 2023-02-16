@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <list>
 #include "Operator.h"
 
 namespace mast {
@@ -30,11 +31,7 @@ private:
     std::string _content;
 };
 
-auto is_a_valid_number(char const& c) -> bool;
-auto is_a_variable(std::vector<char> const& variables, char const& c) -> bool;
-auto is_an_operator(std::map<char, Operator> const& operators, char const& c) -> bool;
-
-auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string const& expression) -> std::vector<Token>;
+auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string const& expression) -> std::list<Token>;
 auto tokenize_numbers(std::string::const_iterator& it) -> std::string;
 
 } // namespace mast

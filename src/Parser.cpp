@@ -57,7 +57,6 @@ auto Parser::expression_to_ast(std::string const& expression, std::vector<char> 
 
 void Parser::add_node(std::stack<TreeNodePointer>& operands, char const& char_operator)
 {
-    // ToDo : Should I do verifications ?
     auto const right = get_top_and_pop(operands);
     auto const left  = get_top_and_pop(operands);
 

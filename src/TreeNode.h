@@ -8,6 +8,7 @@ namespace mast {
 
 class TreeNode {
 public:
+    // ToDo : vector
     struct ChildrenNodes {
         std::shared_ptr<TreeNode> _left_node;
         std::shared_ptr<TreeNode> _right_node;

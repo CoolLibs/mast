@@ -25,12 +25,12 @@ TEST_CASE("Get Expression Test")
     );
     CHECK(result == doctest::Approx(15.0576923077));
 
-    std::string const expression_factorization = "4.(3.25x) + (x+2)x";
+    std::string const expression_factorization = "4.*(3.25x)*1.2 + (x+2)*x";
     double const      result_factorization     = mast::evaluate_ast(
         *parser.expression_to_ast(expression_factorization, variables),
         std::map<char, double>{{'x', 5.}}
     );
-    CHECK(result_factorization == 100);
+    CHECK(result_factorization == doctest::Approx(113));
 
     std::string const expression_var_pow = "(4x^2 + 23.5)*(3^2) / (1 + x^2)";
     double const      result_var_pow     = mast::evaluate_ast(

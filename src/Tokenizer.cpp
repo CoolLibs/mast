@@ -2,9 +2,13 @@
 
 namespace mast {
 
-auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string const& expression) -> std::vector<Token>
+auto is_a_valid_number(char const& c) -> bool;
+auto is_a_variable(std::vector<char> const& variables, char const& c) -> bool;
+auto is_an_operator(std::map<char, Operator> const& operators, char const& c) -> bool;
+
+auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string const& expression) -> std::list<Token>
 {
-    std::vector<Token> tokens_list{};
+    std::list<Token> tokens_list{};
     for (auto it = expression.begin(); it != expression.end(); it++)
     {
         switch (*it)
