@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "Operator.h"
+#include "Tokenizer.h"
 #include "TreeNode.h"
 
 namespace mast {
@@ -12,16 +13,12 @@ namespace mast {
 class Parser {
 public:
     explicit Parser(std::vector<Operator> const& operators);
-    auto expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> std::shared_ptr<TreeNode>;
+    auto expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> TreeNodePointer;
 
 private:
-    static auto create_node(std::stack<std::shared_ptr<TreeNode>>& stack, char const& char_operator) -> std::shared_ptr<TreeNode>;
-    static void add_nodes_from_stack(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack);
-    static void add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char& popped);
-
-    // ToDo: Refacto these parameters
-    static void handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it, std::vector<char> variables);
-    void handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char c);
+    static void add_node(std::stack<TreeNodePointer>& operands, char const& char_operator);
+    static void add_nodes_from_parenthesis_content(std::stack<char>& operators, std::stack<TreeNodePointer>& operands);
+    void        add_nodes_from_stacks(std::stack<char>& operators, std::stack<TreeNodePointer>& operands, std::string token_content);
 
 private:
     std::map<char, Operator> _operators;

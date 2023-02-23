@@ -1,179 +1,103 @@
 #include "Parser.h"
 #include <memory>
 #include <stdexcept>
+#include "tools/expressions/correct.h"
+#include "tools/utils.h"
 
 namespace mast {
 
 Parser::Parser(std::vector<Operator> const& operators)
 {
     for (const auto& o : operators)
-        // ToDo : We will stock string instead of char so we'll get rid of [0]
-        _operators.insert({o._symbol[0], o});
+        _operators.insert({o._symbol, o});
 }
 
-auto Parser::expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> std::shared_ptr<TreeNode>
+auto Parser::expression_to_ast(std::string const& expression, std::vector<char> const& variables) -> TreeNodePointer
 {
-    // ToDo : We will stock string instead of char
-    std::stack<char>                      operator_stack{};
-    std::stack<std::shared_ptr<TreeNode>> operand_stack{};
+    auto                        token_list = mast::tokenize_expression(_operators, variables, expression);
+    std::stack<TreeNodePointer> operands{};
+    std::stack<char>            operators{};
 
-    std::string::const_iterator it;
-    for (it = expression.begin(); it != expression.end(); it++)
+    correct_token_list(token_list);
+
+    for (auto const& token : token_list)
     {
-        char const c      = *it;
-        char       popped = 0;
-
-        switch (c)
+        std::string const& token_content = token.get_content();
+        switch (token.get_type())
         {
-        case ' ':
+        case Token::Type::LeftParenthesis:
+            operators.push('(');
             break;
 
-        case '(':
-            operator_stack.push('(');
+        case Token::Type::RightParenthesis:
+            add_nodes_from_parenthesis_content(operators, operands);
             break;
 
-        case ')':
-            add_nodes_inside_parenthesis(operator_stack, operand_stack, popped);
+        case Token::Type::Operator:
+            add_nodes_from_stacks(operators, operands, token_content);
+            operators.push(token_content[0]);
+            break;
 
-            if (operator_stack.empty())
-                throw std::runtime_error("Unbalanced right parentheses");
+        case Token::Type::Number:
+        case Token::Type::Variable:
+            operands.push(std::make_shared<TreeNode>(token_content));
             break;
 
         default:
-            if (_operators.contains(c))
-                handle_operator_cases(operator_stack, operand_stack, c);
-            else
-                // ToDo: handle_function_cases();
-                handle_number_cases(operand_stack, it, variables);
             break;
         }
     }
 
-    add_nodes_from_stack(operator_stack, operand_stack);
+    // Create nodes from stacks
+    while (!operators.empty() && _operators.contains(operators.top()))
+        add_node(operands, get_top_and_pop(operators));
 
-    return operand_stack.top();
+    return operands.top();
 }
 
-auto Parser::create_node(std::stack<std::shared_ptr<TreeNode>>& stack, char const& char_operator) -> std::shared_ptr<TreeNode>
+void Parser::add_node(std::stack<TreeNodePointer>& operands, char const& char_operator)
 {
-    // ToDo : Some verifications ?
-    std::shared_ptr<TreeNode> const right = stack.top();
-    stack.pop();
+    auto const right = get_top_and_pop(operands);
+    auto const left  = get_top_and_pop(operands);
 
-    std::shared_ptr<TreeNode> const left = stack.top();
-    stack.pop();
-
-    return std::make_shared<TreeNode>(
+    operands.push(std::make_shared<TreeNode>(
         std::string(1, char_operator),
-        mast::TreeNode::ChildrenNodes{left, right}
-    );
+        std::vector<TreeNodePointer>{left, right}
+    ));
 }
 
-void Parser::add_nodes_from_stack(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack)
+void Parser::add_nodes_from_parenthesis_content(std::stack<char>& operators, std::stack<TreeNodePointer>& operands)
 {
-    while (!operator_stack.empty())
+    char current_operator = 0;
+    while (!operators.empty())
     {
-        // ToDo : This verification was not in the java example ?
-        if (operator_stack.top() == '(')
-        {
-            operator_stack.pop();
-            continue;
-        }
-
-        operand_stack.push(create_node(operand_stack, operator_stack.top()));
-        operator_stack.pop();
-    }
-}
-
-void Parser::add_nodes_inside_parenthesis(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char& popped)
-{
-    while (!operator_stack.empty())
-    {
-        popped = operator_stack.top();
-        operator_stack.pop();
-
-        if (popped == '(')
+        current_operator = get_top_and_pop(operators);
+        if (current_operator == '(')
             break;
 
-        operand_stack.push(create_node(operand_stack, popped));
-        break;
+        add_node(operands, current_operator);
     }
+
+    if (operators.empty() && current_operator != '(')
+        throw std::runtime_error("Unbalanced right parentheses");
 }
 
-void Parser::handle_number_cases(std::stack<std::shared_ptr<TreeNode>>& operand_stack, std::string::const_iterator& it, std::vector<char> variables)
+void Parser::add_nodes_from_stacks(std::stack<char>& operators, std::stack<TreeNodePointer>& operands, std::string token_content)
 {
-    // ToDo : Scientific notation
-    auto operand           = std::string(1, *it);
-    auto is_a_valid_number = [](char const& c) {
-        return std::isdigit(c) || c == '.';
-    };
-    auto is_a_variable = [&](char const& c) {
-        return std::count(variables.begin(), variables.end(), c);
-    };
-
-    if (!is_a_valid_number(*it))
+    Operator const current_operator = _operators.at(token_content[0]);
+    while (!operators.empty() && _operators.contains(operators.top()))
     {
-        if (!is_a_variable(*it))
-            throw std::runtime_error("Not a valid variable name");
-
-        operand_stack.push(std::make_shared<TreeNode>(operand));
-        return;
-    }
-
-    bool operand_is_a_float = false;
-    if (*it == '.')
-    {
-        operand_is_a_float = true;
-        operand.insert(0, std::string(1, '0'));
-    }
-
-    std::string::const_iterator next_character = std::next(it);
-    while (*next_character != 0 && (is_a_valid_number(*next_character) || is_a_variable(*next_character)))
-    {
-        if (*next_character == '.')
+        Operator const last_operator = _operators.at(operators.top());
+        if ((!current_operator._right_associative && current_operator._precedence == last_operator._precedence)
+            || (current_operator._precedence < last_operator._precedence))
         {
-            if (operand_is_a_float)
-                throw std::runtime_error("Multiple dots");
-            operand_is_a_float = true;
-        }
-
-        if (is_a_variable(*next_character))
-        {
-            operand_stack.push(std::make_shared<TreeNode>(operand));
-            operand_stack.push(std::make_shared<TreeNode>(std::string(1, *next_character)));
-            operand_stack.push(create_node(operand_stack, '*'));
-            it = next_character;
-            return;
-        }
-
-        operand.append(std::string(1, *next_character));
-        next_character = std::next(next_character);
-        it             = std::next(it);
-    }
-
-    operand_stack.push(std::make_shared<TreeNode>(operand));
-}
-
-void Parser::handle_operator_cases(std::stack<char>& operator_stack, std::stack<std::shared_ptr<TreeNode>>& operand_stack, char c)
-{
-    Operator const o1 = _operators.at(c);
-
-    while (!operator_stack.empty() && _operators.contains(operator_stack.top()))
-    {
-        Operator const& o2 = _operators.at(operator_stack.top());
-
-        if ((!o1._right_associative && o1._precedence == o2._precedence)
-            || o1._precedence > o2._precedence)
-        {
-            operator_stack.pop();
-            create_node(operand_stack, o2._symbol[0]);
+            operators.pop();
+            add_node(operands, last_operator._symbol);
         }
 
         else
-            continue;
+            break;
     }
-
-    operator_stack.push(c);
 }
 
 } // namespace mast
