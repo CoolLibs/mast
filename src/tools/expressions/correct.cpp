@@ -29,6 +29,8 @@ void throw_error_on_multiple_dots_number(std::string token_content)
 void handle_implicit_multiplications(std::list<Token>& tokens_list, std::list<Token>::const_iterator current)
 {
     auto next_it = std::next(current);
+    if (next_it == tokens_list.end())
+        return;
 
     const auto handle_implicit_multiplication_between = [&](Token::Type first_type, std::vector<Token::Type> other_types) {
         if (current->get_type() == first_type
