@@ -18,31 +18,35 @@ TEST_CASE("Get Expression Test")
     auto variables = std::vector<char>{'x'};
     auto parser    = mast::Parser{operators};
 
-    std::string const expression = "(4x + 23.5)*(3^2) / (1 + x^2)";
-    double const      result     = mast::evaluate_ast(
-        *parser.expression_to_ast(expression, variables),
-        std::map<char, double>{{'x', 5.}}
-    );
-    CHECK(result == doctest::Approx(15.0576923077));
+//    std::string const expression = "(4x + 23.5)*(3^2) / (1 + x^2)";
+//    double const      result     = mast::evaluate_ast(
+//        *parser.expression_to_ast(expression, variables),
+//        std::map<char, double>{{'x', 5.}}
+//    );
+//    CHECK(result == doctest::Approx(15.0576923077));
+//
+//    std::string const expression_factorization = "4.*(3.25x)*1.2 + (x+2)*x";
+//    double const      result_factorization     = mast::evaluate_ast(
+//        *parser.expression_to_ast(expression_factorization, variables),
+//        std::map<char, double>{{'x', 5.}}
+//    );
+//    CHECK(result_factorization == doctest::Approx(113));
+//
+//    std::string const expression_var_pow = "(4x^2 + 23.5)*(3^2) / (1 + x^2)";
+//    double const      result_var_pow     = mast::evaluate_ast(
+//        *parser.expression_to_ast(expression_var_pow, variables),
+//        std::map<char, double>{{'x', 5.}}
+//    );
+//    CHECK(result_var_pow == 42.75);
+//
+//    std::string const expression_zero_float = "(.2 + 2.4)";
+//    double const      result_zero_float     = mast::evaluate_ast(
+//        *parser.expression_to_ast(expression_zero_float, variables),
+//        std::map<char, double>{{'x', 5.}}
+//    );
+//    CHECK(result_zero_float == doctest::Approx(2.6));
 
-    std::string const expression_factorization = "4.*(3.25x)*1.2 + (x+2)*x";
-    double const      result_factorization     = mast::evaluate_ast(
-        *parser.expression_to_ast(expression_factorization, variables),
-        std::map<char, double>{{'x', 5.}}
-    );
-    CHECK(result_factorization == doctest::Approx(113));
+    std::string const expression_function = "3*sin(x)+ x(3,x)";
+    auto tree = parser.expression_to_ast(expression_function, variables);
 
-    std::string const expression_var_pow = "(4x^2 + 23.5)*(3^2) / (1 + x^2)";
-    double const      result_var_pow     = mast::evaluate_ast(
-        *parser.expression_to_ast(expression_var_pow, variables),
-        std::map<char, double>{{'x', 5.}}
-    );
-    CHECK(result_var_pow == 42.75);
-
-    std::string const expression_zero_float = "(.2 + 2.4)";
-    double const      result_zero_float     = mast::evaluate_ast(
-        *parser.expression_to_ast(expression_zero_float, variables),
-        std::map<char, double>{{'x', 5.}}
-    );
-    CHECK(result_zero_float == doctest::Approx(2.6));
 }

@@ -5,6 +5,7 @@ namespace mast {
 auto is_a_valid_number(char const& c) -> bool;
 auto is_a_variable(std::vector<char> const& variables, char const& c) -> bool;
 auto is_an_operator(std::map<char, Operator> const& operators, char const& c) -> bool;
+auto is_an_operator_or_number(std::map<char, Operator> const& operators, char const& c) -> bool;
 
 auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string const& expression) -> std::list<Token>
 {
@@ -13,12 +14,13 @@ auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<
     {
         switch (*it)
         {
-        case ' ':
-            break;
-
         case '(':
-            tokens_list.emplace_back(Token::Type::LeftParenthesis);
+        {
+            const auto fn_name_opt = tokenize_functions(tokens_list, operators, variables, it, expression.begin());
+            const auto token       = fn_name_opt.empty() ? Token::Type::LeftParenthesis : Token::Type::FunctionOpening;
+            tokens_list.emplace_back(token, fn_name_opt);
             break;
+        }
 
         case ')':
             tokens_list.emplace_back(Token::Type::RightParenthesis);
@@ -52,6 +54,34 @@ auto tokenize_numbers(std::string::const_iterator& it, std::string::const_iterat
     }
 
     return operand;
+}
+
+auto tokenize_functions(std::list<Token>& tokens_list, std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string::const_iterator& it, std::string::const_iterator begin) -> std::string
+{
+    // ToDo : Too many parameters, maybe move operators and variable into static function?
+    std::string::const_iterator function_checker = std::prev(it);
+    std::string                 function_name    = "";
+
+    while (function_checker != begin && !is_an_operator_or_number(operators, *function_checker))
+    {
+        function_name.insert(function_name.begin(), *function_checker);
+
+        // If the function string has an operator, it will be on top of the vector
+        // ToDo : How do we handle x(x+2) ?
+        if (is_a_variable(variables, *function_checker))
+        {
+            tokens_list.pop_back();
+        }
+
+        function_checker = std::prev(function_checker);
+    }
+
+    return function_name;
+}
+
+auto is_an_operator_or_number(std::map<char, Operator> const& operators, char const& c) -> bool
+{
+    return is_a_valid_number(c) || is_an_operator(operators, c) || c == '(' || c == ')' || c == ' ';
 }
 
 auto is_a_valid_number(char const& c) -> bool

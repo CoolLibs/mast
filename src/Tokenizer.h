@@ -18,6 +18,8 @@ public:
         Number,
         Operator,
         Variable,
+        FunctionOpening,
+        FunctionClosing,
     };
 
     explicit Token(Type type, std::string content = "")
@@ -33,5 +35,6 @@ private:
 
 auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string const& expression) -> std::list<Token>;
 auto tokenize_numbers(std::string::const_iterator& it, std::string::const_iterator end) -> std::string;
+auto tokenize_functions(std::list<Token>& tokens_list, std::map<char, Operator> const& operators, std::vector<char> const& variables, std::string::const_iterator& it, std::string::const_iterator begin) -> std::string;
 
 } // namespace mast
