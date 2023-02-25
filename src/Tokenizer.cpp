@@ -23,8 +23,12 @@ auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<
         }
 
         case ')':
-            tokens_list.emplace_back(Token::Type::RightParenthesis);
+        {
+            const auto last_left_parenthesis     = std::find_if(tokens_list.rbegin(), tokens_list.rend(), [](Token const& token) { return token.get_type() == Token::Type::LeftParenthesis; });
+            const bool has_find_left_parenthesis = last_left_parenthesis != tokens_list.rend();
+            tokens_list.emplace_back(has_find_left_parenthesis ? Token::Type::RightParenthesis : Token::Type::FunctionClosing);
             break;
+        }
 
         default:
             if (is_an_operator(operators, *it))

@@ -46,7 +46,7 @@ TEST_CASE("Get Expression Test")
 //    );
 //    CHECK(result_zero_float == doctest::Approx(2.6));
 
-    std::string const expression_function = "3*sin(x)+ x(3,x)";
+    std::string const expression_function = "3*sin(x)+ x(3,x) + 3(x+2)";
     auto tree = parser.expression_to_ast(expression_function, variables);
 
 }
