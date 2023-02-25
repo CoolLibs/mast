@@ -30,6 +30,10 @@ auto tokenize_expression(std::map<char, Operator> const& operators, std::vector<
             break;
         }
 
+        case ',':
+            tokens_list.emplace_back(Token::Type::FunctionParameterSeparator);
+            break;
+
         default:
             if (is_an_operator(operators, *it))
                 tokens_list.emplace_back(Token::Type::Operator, std::string(1, *it));

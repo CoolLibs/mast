@@ -20,6 +20,7 @@ public:
         Variable,
         FunctionOpening,
         FunctionClosing,
+        FunctionParameterSeparator
     };
 
     explicit Token(Type type, std::string content = "")
